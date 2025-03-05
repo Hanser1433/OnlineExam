@@ -1,0 +1,134 @@
+/* index.css */
+/* 清除浏览器默认格式 */
+* {
+    margin: 0;
+    padding: 0;
+    /* 内减模式 */
+    box-sizing: border-box;
+    font-family: MyFont,Lora,Verdana, Geneva, Tahoma, sans-serif;
+    scroll-behavior: smooth;
+  }
+
+  li {
+    list-style: none;
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  /* 清除浮动 */
+  .clearfix::before,
+  .clearfix::after {
+    content: '';
+    display: table;
+  }
+
+  .clearfix::after {
+    clear: both;
+  }
+
+  .body{
+      text-align: center;
+      height: 130vh;
+      overflow-x: hidden;
+
+  }
+
+  .container
+  {
+      height: 130vh;
+      width: 100%;
+  }
+
+  .header{
+      position: absolute;
+      top: 0;
+      height: 8vh;
+      background-color: transparent;
+      width: 100%;
+      padding: 25px;
+      z-index: 100;
+      font-size: 1.3rem;
+  }
+
+  
+  .loginstu{
+      position: relative;
+      padding: 10px;
+      background-color: #fff;
+      color: #696969;
+      right: -71%;
+      border-radius: 30px;
+  }
+
+  .loginstu:hover{
+      color:#fff;
+      background-color: #a9a9a9;
+  }
+
+  .loginman{
+    position: relative;
+    padding: 10px;
+    background-color: #fff;
+    color: #696969;
+    right: -74%;
+    border-radius: 30px;
+  }
+
+  .loginman:hover{
+    color:#fff;
+    background-color: #a9a9a9;
+  }
+
+  .register{
+    position: relative;
+    padding: 10px;
+    background-color: #fff;
+    color: #696969;
+    right: -68%;
+    border-radius: 30px;
+  }
+
+  .register:hover{
+    color:#fff;
+    background-color: #a9a9a9;
+ }
+
+ .background {
+    background-image: url("../img/mountain.jpg");
+    background-size: cover;
+    background-position: 50% 50%;
+    padding-top: 50vh;
+    height: 130vh;
+    font: 900 10rem '';
+    line-height: 25vh;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    text-align: center;
+    overflow: hidden;
+}
+ .wenzi1{
+    font-size: 3rem;
+    color: black;
+    line-height: 50vh;
+    -webkit-text-fill-color: black;
+    display: block;
+}
+
+
+
+.background::before {
+    content: '';
+    background-size: cover;
+    background-image: inherit;
+    background-position: 50% 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: -99;
+}
+

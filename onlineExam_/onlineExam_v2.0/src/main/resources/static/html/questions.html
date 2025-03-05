@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Questions</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        #container {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+        }
+        #top {
+            background-color: #545c64;
+            margin-right: 1px;
+            text-align: center;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+<div class="content-container" direction="vertical">
+    <!-- Buttons -->
+    <div class="content-row">
+        <div>
+            <button id="requestDataBtn" class="el-button el-button--primary">检索</button>
+            <button id="clearBtn" class="el-button el-button--primary">显示全部</button>
+            <button id="addQuestionBtn" class="el-button el-button--success">新增试题</button>
+        </div>
+    </div>
+    <!-- List -->
+    <div>
+        <table class="el-table" style="width: 100%">
+            <thead>
+            <tr>
+                <th>题目</th>
+                <th>类别</th>
+                <th>类型</th>
+                <th>选项</th>
+                <th>正确答案</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="questionsTableBody">
+            <!-- Questions will be dynamically inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const questionsData = [];
+    const queryParams = {
+        category: "",
+        type: ""
+    };
+
+    axios.defaults.baseURL = 'http://localhost:8080/api';
+
+    document.addEventListener("DOMContentLoaded", () => {
+        fetchQuestions();
+
+        document.getElementById('requestDataBtn').addEventListener('click', requestData);
+        document.getElementById('clearBtn').addEventListener('click', clear);
+        document.getElementById('addQuestionBtn').addEventListener('click', addQuestion);
+    });
+
+    function fetchQuestions() {
+        axios.get('/question/list')
+            .then(response => {
+                const data = response.data.map(questions => {
+                    questions.optionsParsed = JSON.parse(questions.options);
+                    return questions;
+                });
+                updateQuestionsTable(data);
+            })
+            .catch(error => {
+                console.error("获取试题列表失败:", error);
+            });
+    }
+
+    function updateQuestionsTable(data) {
+        const tableBody = document.getElementById('questionsTableBody');
+        tableBody.innerHTML = '';
+
+        data.forEach(questions => {
+            const row = document.createElement('tr');
+
+            const questionCell = document.createElement('td');
+            questionCell.textContent = questions.question;
+            row.appendChild(questionCell);
+
+            const categoryCell = document.createElement('td');
+            categoryCell.textContent = questions.category;
+            row.appendChild(categoryCell);
+
+            const typeCell = document.createElement('td');
+            typeCell.textContent = questions.type;
+            row.appendChild(typeCell);
+
+            const optionsCell = document.createElement('td');
+            const optionsDiv = document.createElement('div');
+            if (questions.type !== '判断题') {
+                optionsDiv.innerHTML = `
+            <p>A: <input type="text" value="${questions.optionsParsed.A}" disabled></p>
+            <p>B: <input type="text" value="${questions.optionsParsed.B}" disabled></p>
+            <p>C: <input type="text" value="${questions.optionsParsed.C}" disabled></p>
+            <p>D: <input type="text" value="${questions.optionsParsed.D}" disabled></p>
+          `;
+            } else {
+                optionsDiv.innerHTML = `
+            <p>T: <input type="text" value="${questions.optionsParsed.T}" disabled></p>
+            <p>F: <input type="text" value="${questions.optionsParsed.F}" disabled></p>
+          `;
+            }
+            optionsCell.appendChild(optionsDiv);
+            row.appendChild(optionsCell);
+
+            const correctAnswerCell = document.createElement('td');
+            correctAnswerCell.textContent = questions.correctAnswer;
+            row.appendChild(correctAnswerCell);
+
+            const actionsCell = document.createElement('td');
+            const editButton = document.createElement('button');
+            editButton.textContent = '编辑';
+            editButton.classList.add('el-button', 'el-button--primary');
+            editButton.addEventListener('click', () => editQuestion(questions.id));
+            actionsCell.appendChild(editButton);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.textContent = '删除';
+            deleteButton.classList.add('el-button', 'el-button--danger');
+            deleteButton.addEventListener('click', () => deleteQuestion(questions.id));
+            actionsCell.appendChild(deleteButton);
+
+            row.appendChild(actionsCell);
+            tableBody.appendChild(row);
+        });
+    }
+
+    function requestData() {
+        alert('筛选请求参数：' + JSON.stringify(queryParams));
+        // TODO: Implement filtering logic here
+    }
+
+    function clear() {
+        queryParams.category = "";
+        queryParams.type = "";
+        fetchQuestions();
+    }
+
+    function addQuestion() {
+        window.location.href = 'addQuestion.html'; // Assuming you have an addQuestion.html
+    }
+
+    function editQuestion(id) {
+        window.location.href = `editQuestion.html?id=${id}`; // Assuming you have an editQuestion.html
+    }
+
+    function deleteQuestion(id) {
+        if (confirm('确认删除该试题吗?')) {
+            axios.delete(`/question/delete/${id}`)
+                .then(() => {
+                    fetchQuestions();
+                    alert('删除成功!');
+                })
+                .catch(error => {
+                    console.error("删除试题失败:", error);
+                    alert('删除失败');
+                });
+        } else {
+            alert('已取消删除');
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration</title>
+    <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+<div class="header">
+    <a href="index.html"><img src="../img/logo.png" alt="logo" style="height: 15vh;"></a>
+</div>
+<div class="shell">
+    <div class="container a-container" id="a-container">
+        <form action="" method="" class="form" id="a-form">
+            <h2 class="form_title title">管理员注册</h2>
+            <input type="text" class="form_input" placeholder="Username" id="adminUsername">
+            <input type="text" class="form_input" placeholder="Email" id="adminEmail">
+            <input type="password" class="form_input" placeholder="Password" id="adminPassword">
+            <button type="button" class="form_button button submit" id="adminRegister">注册</button>
+        </form>
+    </div>
+
+    <div class="container b-container" id="b-container">
+        <form action="" method="" class="form" id="b-form">
+            <h2 class="form_title title">学生注册</h2>
+            <input type="text" class="form_input" placeholder="Username" id="studentUsername">
+            <input type="text" class="form_input" placeholder="Email" id="studentEmail">
+            <input type="password" class="form_input" placeholder="Password" id="studentPassword">
+            <button type="button" class="form_button button submit" id="studentRegister">注册</button>
+        </form>
+    </div>
+
+    <div class="switch" id="switch-cnt">
+        <div class="switch_circle"></div>
+        <div class="switch_circle switch_circle-t"></div>
+        <div class="switch_container" id="switch-c1">
+            <h2 class="switch_title title" style="letter-spacing: 0;">Welcome Back！</h2>
+            <button class="switch_button button switch-btn">我是用户，点这里</button>
+        </div>
+
+        <div class="switch_container is-hidden" id="switch-c2">
+            <h2 class="switch_title title" style="letter-spacing: 0;">Hello Friend！</h2>
+            <button class="switch_button button switch-btn">我是管理员，点这里</button>
+        </div>
+    </div>
+</div>
+<script>
+    let switchCtn = document.querySelector("#switch-cnt");
+    let switchC1 = document.querySelector("#switch-c1");
+    let switchC2 = document.querySelector("#switch-c2");
+    let switchCircle = document.querySelectorAll(".switch_circle");
+    let switchBtn = document.querySelectorAll(".switch-btn");
+    let aContainer = document.querySelector("#a-container");
+    let bContainer = document.querySelector("#b-container");
+    let allButtons = document.querySelectorAll(".submit");
+
+    let getButtons = (e) => e.preventDefault()
+    let changeForm = (e) => {
+        // 修改类名
+        switchCtn.classList.add("is-gx");
+        setTimeout(function () {
+            switchCtn.classList.remove("is-gx");
+        }, 1500)
+        switchCtn.classList.toggle("is-txr");
+        switchCircle[0].classList.toggle("is-txr");
+        switchCircle[1].classList.toggle("is-txr");
+
+        switchC1.classList.toggle("is-hidden");
+        switchC2.classList.toggle("is-hidden");
+        aContainer.classList.toggle("is-txl");
+        bContainer.classList.toggle("is-txl");
+        bContainer.classList.toggle("is-z");
+    }
+    // 点击切换
+    let shell = (e) => {
+        for (var i = 0; i < allButtons.length; i++)
+            allButtons[i].addEventListener("click", getButtons);
+        for (var i = 0; i < switchBtn.length; i++)
+            switchBtn[i].addEventListener("click", changeForm)
+    }
+    window.addEventListener("load", shell);
+</script>
+<script>
+    function studentRegister() {
+        const username = document.querySelector("#studentUsername").value;
+        const email = document.querySelector("#studentEmail").value;
+        const password = document.querySelector("#studentPassword").value;
+        const sid = "some_sid_value";
+
+        fetch('http://localhost:8080/student/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, email: email, password: password,sid: sid })
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function adminRegister() {
+        const username = document.querySelector("#adminUsername").value;
+        const email = document.querySelector("#adminEmail").value;
+        const password = document.querySelector("#adminPassword").value;
+
+        fetch('http://localhost:8080/admin/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ username: username, email: email, password: password })
+        })
+            .then(response => response.text())
+            .then(data => {
+                alert(data);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.getElementById("adminRegister").addEventListener("click", adminRegister);
+    document.getElementById("studentRegister").addEventListener("click", studentRegister);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线考试</title>
+    <link rel="stylesheet" href="../css/start-exam.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="header">
+    <h1>在线考试系统</h1>
+</div>
+
+<div class="shell">
+    <div id="start">
+        <h2>选择专业方向</h2>
+        <form id="categoryForm">
+            <label for="category1">专业方向1:</label>
+            <select id="category1" name="category1">
+                <option value="化学">化学</option>
+                <option value="生物">生物</option>
+                <option value="历史">历史</option>
+            </select>
+            <label for="category2">专业方向2:</label>
+            <select id="category2" name="category2">
+                <option value="化学">化学</option>
+                <option value="生物">生物</option>
+                <option value="历史">历史</option>
+            </select>
+            <button type="submit">开始考试</button>
+        </form>
+    </div>
+
+    <div id="exam" style="display:none;">
+        <h2>考试中</h2>
+        <form id="examForm">
+            <div id="questions"></div>
+            <button type="submit">提交答案</button>
+        </form>
+    </div>
+
+    <div id="result" style="display:none;">
+        <h2>考试结果</h2>
+        <p id="score"></p>
+        <button onclick="window.location.href='student.html'">返回</button>
+    </div>
+</div>
+
+<script>
+    let currentQuestion = 0;
+    let questions = [];
+    let userAnswers = {};
+
+    $(document).ready(function () {
+        $('#categoryForm').submit(function (event) {
+            event.preventDefault();
+            const category1 = $('#category1').val();
+            const category2 = $('#category2').val();
+            $.ajax({
+                url: '/api/question/random',
+                type: 'GET',
+                data: { category1, category2 },
+                success: function (data) {
+                    questions = data;
+                    $('#start').hide();
+                    $('#exam').show();
+                    showQuestion();
+                },
+                error: function () {
+                    alert('无法获取题目，请稍后再试。');
+                }
+            });
+        });
+
+        $('#examForm').submit(function (event) {
+            event.preventDefault();
+            const answer = $('#answer').val().trim();
+            userAnswers[questions[currentQuestion].id] = answer;
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                $.ajax({
+                    url: '/api/question/check',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(userAnswers),
+                    success: function (data) {
+                        $('#exam').hide();
+                        $('#result').show();
+                        $('#score').text('你的得分: ' + data.score);
+                    },
+                    error: function () {
+                        alert('提交答案时出错，请稍后再试。');
+                    }
+                });
+            }
+        });
+    });
+
+    function showQuestion() {
+        const question = questions[currentQuestion];
+        const optionsStr = question.options;
+        const optionsObj = JSON.parse(optionsStr); // 解析选项字符串为对象
+
+        let optionsHtml = '';
+        for (const key in optionsObj) {
+            if (optionsObj.hasOwnProperty(key)) {
+                optionsHtml += `<p>${key}: ${optionsObj[key]}</p>`;
+            }
+        }
+
+        $('#questions').html(`
+        <div>
+            <p style="text-align: left"><strong>题目类型:</strong> ${question.type}</p>
+            <p style="text-align: left"><strong>题目:</strong> ${question.question}</p>
+            <p style="text-align: left"><strong>题目选项:</strong> <br>${optionsHtml}</p>
+            <label for="answer">答案:</label>
+            <input type="text" id="answer" name="answer" required>
+        </div>
+    `);
+    }
+
+</script>
+</body>
+</html>

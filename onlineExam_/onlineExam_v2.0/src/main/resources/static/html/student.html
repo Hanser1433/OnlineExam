@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生考试页面</title>
+    <link rel="stylesheet" href="../css/modal.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100%;
+            background: url(../img/mountains.svg) no-repeat center center;
+            background-size: cover;
+        }
+
+        .header {
+            background-color: #696969;
+            color: white;
+            opacity: 0.8;
+            padding: 20px 0;
+            font-size: 35px;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .box {
+            background-color: white;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin: 5%;
+            width: 30%;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 50px;
+            border-radius: 30px;
+            opacity: 0.85;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .box:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+<div class="header">
+    <a href="index.html"><img src="../img/logo.png" alt="logo" style="max-height: 50px;"></a>
+    学生考试页面
+</div>
+<div class="container">
+    <div class="box" onclick="navigateTo('start-exam.html')">开始考试</div>
+    <div class="box updateInfo">信息修改</div>
+    <div class="box" onclick="navigateTo('exam-results.html')">考试成绩</div>
+    <div class="box" onclick="navigateTo('my-rank.html')">我的排名</div>
+</div>
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="modalForm">
+            <div>
+                <input type="hidden" id="id">
+            </div>
+            <div>
+                <label for="sid">sid</label>
+                <input type="text" id="sid" required>
+            </div>
+            <div>
+                <label for="username">姓名</label>
+                <input type="text" id="name" required>
+            </div>
+            <div>
+                <label for="username">用户名</label>
+                <input type="text" id="username" required>
+            </div>
+            <div>
+                <label for="password">密码</label>
+                <input type="text" id="password" required>
+            </div>
+            <div>
+                <label for="email">邮箱</label>
+                <input type="text" id="email" required>
+            </div>
+            <div>
+                <label for="phone">电话</label>
+                <input type="text" id="phone" required>
+            </div>
+            <div>
+                <input type="submit" value="提交" class="addSubmit">
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function navigateTo(page) {
+        window.location.href = page;
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        /**
+         * 修改
+         * @param data
+         * @returns {Promise<void>}
+         */
+        function fetchUpdate(data) {
+            return fetch('http://localhost:8080/student/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.text())
+                .then(data => {
+                    console.log(data)
+                    alert("更新成功")
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        let updateInfoEl = document.querySelector(".updateInfo");
+        let modal = document.getElementById('myModal');
+        let span = document.getElementsByClassName('close')[0];
+        let modalForm = document.getElementById('modalForm');
+
+        // 从localStorage获取id
+        let id = localStorage.getItem('id');
+
+        // 定义一个函数用于根据id获取用户信息
+        function fetchInfoById(id) {
+            // 创建一个URL对象，并设置查询参数
+            const url = new URL(`http://localhost:8080/student/getById?id=${id}`);
+            return fetch(url, {
+                method: 'GET', // 使用GET请求，因为参数在URL中
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data) {
+
+                        return data;
+                    }
+                    return null;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    return null;
+                });
+        }
+
+        /**
+         * 添加按钮监听
+         */
+        // 当点击.updateInfo时
+        updateInfoEl.addEventListener('click', function () {
+            // 确保userId存在
+            if (id) {
+                // 获取用户信息并填充表单
+                fetchInfoById(id).then(userInfo => {
+                    if (userInfo) {
+                        document.getElementById('id').value = userInfo.id;
+                        document.getElementById('sid').value = userInfo.sid;
+                        document.getElementById('name').value = userInfo.name;
+                        document.getElementById('username').value = userInfo.username;
+                        document.getElementById('password').value = userInfo.password;
+                        document.getElementById('email').value = userInfo.email;
+                        document.getElementById('phone').value = userInfo.phone;
+                        // 显示模态框
+                        modal.style.display = 'block';
+                    } else {
+                        alert("非法登录")
+                    }
+                });
+            } else {
+                console.error('User ID not found in localStorage.');
+            }
+        });
+        span.onclick = function () {
+            modal.style.display = 'none';
+        }
+        // 处理表单提交
+        modalForm.onsubmit = function (e) {
+            e.preventDefault();
+            // 从输入中获取数据
+            let id = document.getElementById('id').value;
+            let sid = document.getElementById('sid').value;
+            let name = document.getElementById('name').value;
+            let username = document.getElementById('username').value;
+            let password = document.getElementById('password').value;
+            let email = document.getElementById('email').value;
+            let phone = document.getElementById('phone').value;
+            let record = {
+                id: id,
+                sid: sid,
+                name: name,
+                username: username,
+                password: password,
+                email: email,
+                phone: phone
+            };
+            // 发送请求到后端进行更新
+            fetchUpdate(record).then(() => {
+                modal.style.display = 'none';
+            });
+        };
+    })
+</script>
+</body>
+</html>

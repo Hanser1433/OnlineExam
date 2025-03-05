@@ -1,0 +1,40 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>index</title>
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/font.css">
+    <!-- <script src="../js/fontsize.js"></script> -->
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <a href="index.html"><img src="../img/logo.png" alt="logo" style="height: 15vh;"></a>
+            <a href="register.html" class="register"> 注册 </a>
+            <a href="loginstu.html" class="loginstu"> 学生登录 </a>
+            <a href="loginman.html" class="loginman">管理员登录</a>
+        </div>
+        <div class="background">
+            <!-- <span class="wenzi1"> 志犹学海，业比登山。</span> -->
+            <span>Welcome to Online Exam</span>
+        </div>
+    </div>
+</body>
+<script>
+    const background = document.querySelector(".background")
+
+    document.addEventListener('scroll', () => {
+        const scrollY = window.scrollY
+
+        if (scrollY !== 0) {
+            background.style.backgroundPosition = `calc(50% + ${scrollY*2}px) calc(50% + ${scrollY*2}px)`
+        }else{
+            background.style.backgroundPosition = ''
+        }
+    })
+</script>
+</html>

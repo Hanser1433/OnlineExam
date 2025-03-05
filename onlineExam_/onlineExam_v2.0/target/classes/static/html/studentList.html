@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="../css/studentList.css">
+</head>
+
+<body>
+
+<div class="container">
+    <div class="button-container">
+        <form id="queryForm">
+            <input type="text" id="queryInput" placeholder="输入姓名查询">
+            <input type="submit" value="查询" class="queryButton">
+        </form>
+        <button id="addBtn">添加</button>
+        <button id="deleteBtns">批量删除</button>
+    </div>
+    <!-- 表格 -->
+    <div class="table">
+        <table>
+            <thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>学生ID</th>
+                <th>sid</th>
+                <th>姓名</th>
+                <th>用户名</th>
+                <th>密码</th>
+                <th>邮箱</th>
+                <th>电话</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody id="tableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="myModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="modalForm">
+                <div>
+                    <input type="hidden" id="id">
+                </div>
+                <div>
+                    <label for="sid">sid</label>
+                    <input type="text" id="sid" required>
+                </div>
+                <div>
+                    <label for="name">姓名</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div>
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div>
+                    <label for="password">密码</label>
+                    <input type="number" id="password" required>
+                </div>
+                <div>
+                    <label for="email">邮箱</label>
+                    <input type="text" id="email" required>
+                </div>
+                <div>
+                    <label for="phone">电话</label>
+                    <input type="text" id="phone" required>
+                </div>
+                <div>
+                    <input type="submit" value="提交" class="addSubmit">
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let records = [];
+    let currentEditId = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        /**
+         * 获取列表
+         * @returns {Promise<any>}
+         */
+        function fetchStudentList() {
+            return fetch('http://localhost:8080/student/getList', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    records = data;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        /**
+         * 修改
+         * @param id
+         * @param data
+         * @returns {Promise<void>}
+         */
+        function fetchUpdate(data) {
+            return fetch('http://localhost:8080/student/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch(error => console.error('Error:', error));
+        }
+
+        /**
+         * 添加
+         * @param data
+         */
+        function fetchAdd(data) {
+           return   fetch('http://localhost:8080/student/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.text())
+                .then(data => console.log(data))
+                .catch((error) => console.error('Error:', error));
+        }
+
+        /**
+         * 删除
+         * @param id
+         * @returns {Promise<any>}
+         */
+        function fetchDelete(id) {
+            return fetch('http://localhost:8080/student/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({id: id})
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Delete successful:', data);
+                })
+                .catch((error) => {
+                    console.error('Delete error:', error);
+                });
+        }
+
+        /**
+         * 批量删除
+         * @param ids
+         * @returns {Promise<any>}
+         */
+        function fetchBatchDelete(ids) {
+            // 使用fetch API发送请求到服务器的批量删除接口
+            return fetch('http://localhost:8080/student/batchDelete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(ids)
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    console.log('Batch delete successful:', data);
+                })
+                .catch((error) => {
+                    console.error('Batch delete error:', error);
+                });
+        }
+
+        /**
+         * 加载
+         */
+        fetchStudentList().then(() => {
+            renderTable(records); // 重新渲染表格
+        });
+
+        let tableBody = document.getElementById('tableBody');
+        let addBtn = document.getElementById('addBtn');
+        let modal = document.getElementById('myModal');
+        let span = document.getElementsByClassName('close')[0];
+        let modalForm = document.getElementById('modalForm');
+        let queryForm = document.getElementById('queryForm');
+        let deleteBtns = document.getElementById('deleteBtns');
+        let selectAllCheckbox = document.getElementById('selectAll');
+
+
+        function getMaxId(records) {
+            return Math.max(...records.map(record => record.id));
+        }
+
+        /**
+         * 渲染表格
+         * @param data
+         */
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach(function (record) {
+                var tr = document.createElement('tr');
+                tr.innerHTML = `
+                        <td><input type="checkbox" class="selectSingle" data-id="${record.id}"></td>
+                        <td>${record.id}</td>
+                        <td>${record.sid}</td>
+                        <td>${record.name}</td>
+                        <td>${record.username}</td>
+                        <td>${record.password}</td>
+                        <td>${record.email}</td>
+                        <td>${record.phone}</td>
+                        <td>
+                            <button class="editBtn" data-id="${record.id}">编辑</button>
+                            <button class="deleteBtn" data-id="${record.id}">删除</button>
+                        </td>
+                    `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        /**
+         * 添加按钮监听
+         */
+        addBtn.onclick = function () {
+            currentEditId = null;
+            modal.style.display = 'block';
+            document.getElementById('modalForm').reset();
+        }
+
+        span.onclick = function () {
+            modal.style.display = 'none';
+        }
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        modalForm.onsubmit = function (e) {
+            e.preventDefault();
+            let id = currentEditId ? currentEditId : getMaxId(records) + 1;
+            let sid = document.getElementById('sid').value;
+            let name = document.getElementById('name').value;
+            let username = document.getElementById('username').value;
+            let password = document.getElementById('password').value;
+            let email = document.getElementById('email').value;
+            let phone = document.getElementById('phone').value;
+
+            let record = {
+                id: id,
+                sid: sid,
+                name: name,
+                username: username,
+                password: password,
+                email: email,
+                phone: phone,
+            };
+
+            if (currentEditId) {
+                // 编辑操作
+                // 找到要更新的记录并替换它
+                const index = records.findIndex(r => r.id === currentEditId);
+                if (index > -1) {
+                    records[index] = record;
+                }
+                // 发送请求到后端进行更新
+                fetchUpdate(record).then(()=>{
+                    fetchStudentList().then(() => {
+                        console.log("更新")
+                        renderTable(records); // 重新渲染表格
+                        modal.style.display = 'none'; // 隐藏模态框
+                    })
+                });
+            } else {
+                // 新增操作
+                records.push(record);
+                // 发送请求到后端进行新增
+                fetchAdd(record).then(()=>{
+                    fetchStudentList().then(() => {
+                        console.log("更新")
+                        renderTable(records); // 重新渲染表格
+                        modal.style.display = 'none'; // 隐藏模态框
+                    })
+                });
+            }
+
+
+
+        };
+
+        tableBody.onclick = function (e) {
+            if (e.target.classList.contains('editBtn')) {
+                currentEditId = parseInt(e.target.dataset.id);
+                let record = records.find(record => record.id === currentEditId);
+                document.getElementById('id').value = record.id;
+                document.getElementById('sid').value = record.sid;
+                document.getElementById('name').value = record.name;
+                document.getElementById('username').value = record.username;
+                document.getElementById('password').value = record.password;
+                document.getElementById('email').value = record.email
+                document.getElementById('phone').value = record.phone;
+                modal.style.display = 'block';
+            } else if (e.target.classList.contains('deleteBtn')) {
+                let id = parseInt(e.target.dataset.id);
+
+                deleteRecord(id);
+            }
+        }
+
+        function deleteRecord(id) {
+            // 从records数组中找到并删除对应的记录
+            records = records.filter(record => record.id !== id);
+            fetchDelete(id).then(() => {
+                renderTable(records); // 重新渲染表格
+            });
+        }
+
+        // 假设这是批量删除按钮的点击事件处理器
+        deleteBtns.addEventListener('click', function (e) {
+            let selectedIds = Array.from(document.querySelectorAll('.selectSingle:checked'))
+                .map(cb => parseInt(cb.dataset.id, 10));
+
+            // 调用批量删除
+            fetchBatchDelete(selectedIds).then(() => {
+                // 从records数组中删除选中的记录
+                records = records.filter(record => !selectedIds.includes(record.id));
+                renderTable(records); // 重新渲染表格
+            });
+        });
+
+
+        selectAllCheckbox.addEventListener('click', function (e) {
+            let checkboxes = document.querySelectorAll('.selectSingle');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+
+        queryForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            let query = document.getElementById('queryInput').value;
+            let filteredRecords = records.filter(record => record.username.toLowerCase().includes(query.toLowerCase()));
+            renderTable(filteredRecords);
+        });
+    });
+</script>
+</body>
+
+</html>

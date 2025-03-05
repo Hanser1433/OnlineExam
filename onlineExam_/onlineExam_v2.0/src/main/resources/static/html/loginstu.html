@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+<div class="header">
+    <a href="index.html"><img src="../img/logo.png" alt="logo" style="height: 15vh;"></a>
+</div>
+<div class="shell">
+    <div class="box-left">
+        <h2>学生端</h2>
+        <span>
+            欢迎来到在线考试系统！轻松注册登录，即可随时随地检测学习成果。题库丰富，自动评分，助你快速掌握知识点。开始你的学习之旅吧！
+        </span>
+    </div>
+    <div class="box-right">
+        <div class="form">
+            <label for="username">用户名</label>
+            <input type="text" id="username">
+            <label for="password">密码</label>
+            <input type="password" id="password">
+            <input type="submit" id="submit" value="Submit" onclick="login()">
+        </div>
+    </div>
+</div>
+
+<script>
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        fetch('http://localhost:8080/student/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `username=${username}&password=${password}`
+        })
+            .then(response => {
+                if (response.ok) {
+                    return response.text();
+                } else {
+                    throw new Error('Login failed');
+                }
+            })
+            .then(data => {
+                alert(data);
+                localStorage.setItem("id",data);
+                window.location.href = 'student.html'; // 登录成功后跳转到 student.html
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    document.querySelector('.form').addEventListener('submit', function(event) {
+        event.preventDefault(); // 防止表单提交刷新页面
+        login();
+    });
+</script>
+
+</body>
+</html>

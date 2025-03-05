@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Question</title>
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        .content-container {
+            width: 60%;
+            margin: auto;
+            padding: 20px;
+        }
+        .form-item {
+            margin-bottom: 15px;
+        }
+        .form-item label {
+            display: inline-block;
+            width: 80px;
+            text-align: right;
+        }
+        .form-item input, .form-item textarea, .form-item select {
+            width: calc(100% - 90px);
+            padding: 8px;
+        }
+        .form-item .el-col {
+            display: inline-block;
+        }
+        .form-item .el-col input {
+            width: calc(100% - 60px);
+        }
+        .form-item .el-col span {
+            display: inline-block;
+            width: 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="content-container">
+    <!-- 添加新题目的表单 -->
+    <form id="questionForm">
+        <div class="form-item">
+            <label for="category">题目类别</label>
+            <select id="category" name="category">
+                <option value="" disabled selected>请选择</option>
+                <option value="化学">化学</option>
+                <option value="生物">生物</option>
+                <option value="历史">历史</option>
+            </select>
+        </div>
+        <div class="form-item">
+            <label>题目类型</label>
+            <input type="radio" id="singleChoice" name="type" value="单选题" onchange="handleTypeChange()">
+            <label for="singleChoice">单选题</label>
+            <input type="radio" id="multipleChoice" name="type" value="多选题" onchange="handleTypeChange()">
+            <label for="multipleChoice">多选题</label>
+            <input type="radio" id="trueFalse" name="type" value="判断题" onchange="handleTypeChange()">
+            <label for="trueFalse">判断题</label>
+        </div>
+        <div class="form-item">
+            <label for="stem">题目内容</label>
+            <textarea id="stem" name="stem" rows="4"></textarea>
+        </div>
+        <div class="form-item" id="optionsContainer">
+            <!-- Options will be dynamically inserted here -->
+        </div>
+        <div class="form-item">
+            <label for="correctAnswer">正确答案</label>
+            <input type="text" id="correctAnswer" name="correctAnswer">
+        </div>
+        <div class="form-item">
+            <button type="button" class="el-button el-button--primary" onclick="submitForm()">提交</button>
+            <button type="button" class="el-button" onclick="resetForm()">重置</button>
+        </div>
+    </form>
+</div>
+<div>
+    <button class="el-button el-button--primary" onclick="goBack()">返回</button>
+</div>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const form = {
+        category: '',
+        type: '',
+        stem: '',
+        options: { A: '', B: '', C: '', D: '', T: '', F: '' },
+        correctAnswer: ''
+    };
+
+    function handleTypeChange() {
+        form.type = document.querySelector('input[name="type"]:checked').value;
+        form.options = { A: '', B: '', C: '', D: '', T: '', F: '' };
+        form.correctAnswer = '';
+
+        const optionsContainer = document.getElementById('optionsContainer');
+        optionsContainer.innerHTML = '';
+
+        if (form.type !== '判断题') {
+            ['A', 'B', 'C', 'D'].forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('form-item');
+                optionDiv.innerHTML = `
+            <label>${option}</label>
+            <input type="text" id="option${option}" name="option${option}" placeholder="请输入选项">
+          `;
+                optionsContainer.appendChild(optionDiv);
+            });
+        } else {
+            ['T', 'F'].forEach(option => {
+                const optionDiv = document.createElement('div');
+                optionDiv.classList.add('form-item');
+                optionDiv.innerHTML = `
+            <label>${option}</label>
+            <input type="text" id="option${option}" name="option${option}" placeholder="请输入选项">
+          `;
+                optionsContainer.appendChild(optionDiv);
+            });
+        }
+    }
+
+    function submitForm() {
+        const category = document.getElementById('category').value;
+        const type = document.querySelector('input[name="type"]:checked').value;
+        const stem = document.getElementById('stem').value;
+        const correctAnswer = document.getElementById('correctAnswer').value;
+
+        const options = {};
+        if (type !== '判断题') {
+            ['A', 'B', 'C', 'D'].forEach(option => {
+                options[option] = document.getElementById(`option${option}`).value;
+            });
+        } else {
+            ['T', 'F'].forEach(option => {
+                options[option] = document.getElementById(`option${option}`).value;
+            });
+        }
+
+        const dataToSubmit = {
+            category,
+            question: stem,
+            type,
+            options: JSON.stringify(options),
+            correctAnswer
+        };
+
+        axios.post('http://localhost:8080/api/question/add', dataToSubmit)
+            .then(() => {
+                alert('提交成功!');
+                window.location.href = 'questions.html';
+            })
+            .catch(error => {
+                console.error(error);
+                alert('提交失败，请稍后再试');
+            });
+    }
+
+    function resetForm() {
+        document.getElementById('questionForm').reset();
+        handleTypeChange();
+    }
+
+    function goBack() {
+        window.location.href = 'questions.html';
+    }
+</script>
+</body>
+</html>
